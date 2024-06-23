@@ -6,23 +6,23 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: biatec-learn-main-deployment
+  name: biatec-identity-main-deployment
   namespace: biatec
 spec:
   selector:
     matchLabels:
-      app: biatec-learn-main
+      app: biatec-identity-main
   replicas: 1
   template:
     metadata:
       labels:
-        app: biatec-learn-main
+        app: biatec-identity-main
     spec:
       imagePullSecrets:
         - name: regcred
       containers:
-        - name: biatec-learn-main
-          image: scholtz2/biatec-learn:1.2024.06.23-main
+        - name: biatec-identity-main
+          image: scholtz2/biatec-identity:1.2024.06.23-main
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -41,24 +41,24 @@ spec:
             failureThreshold: 2
             terminationGracePeriodSeconds: 1
           volumeMounts:
-            - name: biatec-learn-main-conf
+            - name: biatec-identity-main-conf
               mountPath: /app/config.json
               subPath: config.json
       volumes:
-        - name: biatec-learn-main-conf
+        - name: biatec-identity-main-conf
           configMap:
-            name: biatec-learn-main-conf
+            name: biatec-identity-main-conf
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: biatec-learn-main-service
+  name: biatec-identity-main-service
   namespace: biatec
 spec:
   type: ClusterIP
   selector:
-    app: biatec-learn-main
+    app: biatec-identity-main
   ports:
     - name: http
       protocol: TCP
@@ -70,37 +70,37 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: biatec-learn-main
+  name: biatec-identity-main
   namespace: biatec
   annotations:
-    kubernetes.io/ingress.class: 'nginx'
-    nginx.ingress.kubernetes.io/backend-protocol: 'HTTP'
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
   tls:
     - hosts:
-        - learn.biatec.io
-        - www.learn.biatec.io
-      secretName: tls-learn.biatec.io
+        - identity.biatec.io
+        - www.identity.biatec.io
+      secretName: tls-identity.biatec.io
   rules:
-    - host: learn.biatec.io
+    - host: identity.biatec.io
       http:
         paths:
           - path: /(.*)
             pathType: Prefix
             backend:
               service:
-                name: biatec-learn-main-service
+                name: biatec-identity-main-service
                 port:
                   number: 8080
-    - host: www.learn.biatec.io
+    - host: www.identity.biatec.io
       http:
         paths:
           - path: /(.*)
             pathType: Prefix
             backend:
               service:
-                name: biatec-learn-main-service
+                name: biatec-identity-main-service
                 port:
                   number: 8080
