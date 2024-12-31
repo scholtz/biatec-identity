@@ -62,12 +62,12 @@ watch(
 )
 </script>
 <template>
-  <div class="flex flex-column min-h-full p-0 m-0">
+  <div class="flex flex-col flex-1 min-h-full p-0 m-0 w-full">
     <Toast />
     <PageHeader />
     <Suspense>
       <AlgorandAuthentication
-        arc14Realm="BiatecLearn"
+        arc14Realm="BiatecIdentity"
         @onStateChange="onStateChange"
         @onNotification="onNotification"
         ref="authComponent"
@@ -78,7 +78,7 @@ watch(
         :algodToken="store.state.algodToken"
         :store="store.state.authState"
       >
-        <div class="flex-grow-1 flex-row mx-2 my-0 h-full">
+        <div class="flex flex-1 flex-row mx-2 my-0 h-full w-full">
           <slot />
         </div>
       </AlgorandAuthentication>

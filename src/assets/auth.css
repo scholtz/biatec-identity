@@ -9,6 +9,7 @@
   box-shadow: #ffe7c6 0 5px 10px;
   border-radius: 20px;
   padding: 10px;
+  background-color: #ffffff99;
 }
 .wallet-option {
   vertical-align: middle;
@@ -24,4 +25,33 @@
 }
 .wallet-icon {
   vertical-align: middle;
+  width: 2em;
+}
+.wallet-settings h3 {
+  font-weight: bold;
+}
+.wallets-page {
+  display: flex;
+  flex: auto;
+  flex-flow: row;
+}
+
+.wallets-page > div {
+  min-width: 400px;
+  padding: 0;
+  margin: 20px;
+  display: inline-block;
+}
+.wallets-page .p-button {
+  margin-right: 10px;
+  margin-top: 10px;
+}
+.wallets-page input {
+  padding: 5px;
+}
+.wallets-page .p-input-icon {
+  display: none !important;
+}
+.wallet-option > div {
+  display: flex;
 }

@@ -11,9 +11,9 @@ import Button from 'primevue/button'
       <div class="m-2 md:m-6">
         <Card class="col-12 md:col-offset-3 md:col-6 my-4">
           <template #content>
-            <h1>Join the biatec identity waiting list</h1>
-            <p>First to join will have priority in usage of our services:</p>
-            <ul>
+            <h1 class="text-3xl">Join the biatec identity waiting list</h1>
+            <p class="my-5">First to join will have priority in usage of our services:</p>
+            <ul class="list-disc list-inside my-5">
               <li>up to 2x lower liqudity pool fees when trading at the Biatec DEX</li>
               <li>biatec engagement level increased</li>
               <li>
