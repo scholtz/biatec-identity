@@ -11,6 +11,9 @@ export interface IState {
   authState: AuthenticationStore
   authComponent: any
   forceAuth: boolean
+  isVerifier: boolean
+  verificationUser: string
+  verificationDataLoaded: boolean
 
   fileGateway: string
 
@@ -24,6 +27,9 @@ const defaultState: IState = {
   authState: new AuthenticationStore(),
   authComponent: null,
   forceAuth: false,
+  isVerifier: false,
+  verificationDataLoaded: false,
+  verificationUser: '',
 
   fileGateway: 'https://biatec-identity-gateway.de.biatec.io/',
 
