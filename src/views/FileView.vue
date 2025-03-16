@@ -101,7 +101,7 @@ const onBeforeSend = (e: FileUploadBeforeSendEvent) => {
 }
 const loadFile = async () => {
   const response = await axios.get(
-    `${store.state.fileGateway}/v1/document/${state.obj.fileId}/download`,
+    `${store.state.fileGateway}/v1/document/download/${state.obj.fileId}`,
     { responseType: 'blob', headers: { Authorization: store.state.authState.arc14Header } }
   )
   // Extract MIME type from response.headers
