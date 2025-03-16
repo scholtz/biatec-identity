@@ -31,7 +31,7 @@ const defaultState: IState = {
   verificationDataLoaded: false,
   verificationUser: '',
 
-  fileGateway: 'https://biatec-identity-gateway.de.biatec.io/',
+  fileGateway: 'https://biatec-identity-gateway.de.biatec.io',
 
   algodHost: 'https://mainnet-api.algonode.cloud',
   algodPort: 443,

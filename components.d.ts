@@ -8,7 +8,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('primevue/button')['default']
-    copy: typeof import('./src/components/form/InputTextField copy.vue')['default']
     CountrySelectField: typeof import('./src/components/form/CountrySelectField.vue')['default']
     DateField: typeof import('./src/components/form/DateField.vue')['default']
     DatePicker: typeof import('primevue/datepicker')['default']

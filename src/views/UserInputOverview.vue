@@ -13,6 +13,7 @@ import { telegramFormatter } from '@/scripts/formatters/telegramFormatter'
 import { xAccountFormatter } from '@/scripts/formatters/xAccountFormatter'
 import { fileFormatter } from '@/scripts/formatters/fileFormatter'
 import { proofFormatter } from '@/scripts/formatters/proofFormatter'
+import type { KYCInput } from '@/interface/KYCInput'
 
 import { onMounted, watch } from 'vue'
 import axios from 'axios'
@@ -41,7 +42,11 @@ onMounted(async () => {
 
 const loadFromGateway = async () => {
   try {
-    const isVerifierResponse = await axios.get(`${store.state.fileGateway}v1/is-biatec-verifier`, {
+    if (store.state.userInput.verificationClaim) {
+      // do not override the loaded data
+      return
+    }
+    const isVerifierResponse = await axios.get(`${store.state.fileGateway}/v1/is-biatec-verifier`, {
       headers: { Authorization: store.state.authState.arc14Header }
     })
     store.state.isVerifier = false
@@ -53,12 +58,17 @@ const loadFromGateway = async () => {
     }
 
     var docId = 'kyc-form.json'
-    const response = await axios.get(`${store.state.fileGateway}v1/document/utf8/${docId}`, {
+    const response = await axios.get(`${store.state.fileGateway}/v1/document/utf8/${docId}`, {
       headers: { Authorization: store.state.authState.arc14Header }
     })
     if (response.status === 200) {
       console.log('response', response)
-      store.state.userInput = response.data
+      const data = response.data as KYCInput
+
+      if (data.verificationClaim) {
+        console.log('loaded KYCInput from secure storage', data)
+        store.state.userInput = data
+      }
     }
   } catch (e) {
     console.error('form not loaded', e)
@@ -68,7 +78,7 @@ const loadFromGatewayAdmin = async () => {
   try {
     var docId = 'kyc-form.json'
     const response = await axios.get(
-      `${store.state.fileGateway}v1/document/utf8/${store.state.verificationUser}/${docId}`,
+      `${store.state.fileGateway}/v1/document/utf8/${store.state.verificationUser}/${docId}`,
       {
         headers: { Authorization: store.state.authState.arc14Header }
       }
@@ -83,10 +93,10 @@ const loadFromGatewayAdmin = async () => {
     console.error('form not loaded', e)
   }
 }
-const saveFormToGateway = async (docId) => {
+const saveFormToGateway = async () => {
   try {
-    var docId = 'kyc-form.json'
-    const url = `${store.state.fileGateway}v1/document/utf8/${docId}`
+    const docId = 'kyc-form.json'
+    const url = `${store.state.fileGateway}/v1/document/utf8/${docId}`
     const headers = {
       Authorization: store.state.authState.arc14Header,
       'Content-Type': 'application/json'
@@ -95,7 +105,7 @@ const saveFormToGateway = async (docId) => {
 
     const response = await axios.put(url, data, { headers })
     console.log('Success:', response.data)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error:', error.response?.data || error.message)
   }
 }
