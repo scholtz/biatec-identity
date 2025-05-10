@@ -18,6 +18,11 @@ const router = createRouter({
       component: PublicHomeView
     },
     {
+      path: '/user-input-overview',
+      name: 'user-input-overview',
+      component: () => import('@/views/UserInputOverview.vue')
+    },
+    {
       path: '/person',
       name: 'person',
       component: () => import('@/views/PersonView.vue')
@@ -46,11 +51,6 @@ const router = createRouter({
       path: '/assign-to-company/address/:id',
       name: 'assign-to-company-address-id',
       component: () => import('@/views/Address2CompanyView.vue')
-    },
-    {
-      path: '/user-input-overview',
-      name: 'user-input-overview',
-      component: () => import('@/views/UserInputOverview.vue')
     },
     {
       path: '/company/',

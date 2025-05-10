@@ -15,10 +15,17 @@ import { fileFormatter } from '@/scripts/formatters/fileFormatter'
 import { proofFormatter } from '@/scripts/formatters/proofFormatter'
 import type { KYCInput } from '@/interface/KYCInput'
 
-import { onMounted, watch } from 'vue'
+import { onMounted, reactive, watch } from 'vue'
 import axios from 'axios'
+import AvmAddress from '@/components/AvmAddress.vue'
+import { useToast } from 'primevue/usetoast'
 
+const toast = useToast()
 const store = useAppStore()
+
+const state = reactive({
+  savingKYC: false
+})
 
 onMounted(async () => {
   try {
@@ -35,8 +42,15 @@ onMounted(async () => {
     if (store.state.authState.arc14Header) {
       await loadFromGateway()
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error('recovery failed', e)
+
+    toast.add({
+      detail: 'Recovery failed: ' + e.message,
+      severity: 'error',
+      closable: true,
+      life: 10000
+    })
   }
 })
 
@@ -70,8 +84,15 @@ const loadFromGateway = async () => {
         store.state.userInput = data
       }
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error('form not loaded', e)
+
+    toast.add({
+      detail: 'Form failed to load. ' + e.message,
+      severity: 'error',
+      closable: true,
+      life: 10000
+    })
   }
 }
 const loadFromGatewayAdmin = async () => {
@@ -89,12 +110,20 @@ const loadFromGatewayAdmin = async () => {
       store.state.userInput = response.data
       store.state.verificationDataLoaded = true
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error('form not loaded', e)
+
+    toast.add({
+      detail: 'Form failed to load. ' + e.message,
+      severity: 'error',
+      closable: true,
+      life: 10000
+    })
   }
 }
-const saveFormToGateway = async () => {
+const saveFormToGatewayClick = async () => {
   try {
+    state.savingKYC = true
     const docId = 'kyc-form.json'
     const url = `${store.state.fileGateway}/v1/document/utf8/${docId}`
     const headers = {
@@ -105,8 +134,23 @@ const saveFormToGateway = async () => {
 
     const response = await axios.put(url, data, { headers })
     console.log('Success:', response.data)
-  } catch (error: any) {
-    console.error('Error:', error.response?.data || error.message)
+    state.savingKYC = false
+    toast.add({
+      detail: 'Form has been saved.',
+      severity: 'info',
+      closable: true,
+      life: 5000
+    })
+  } catch (e: any) {
+    state.savingKYC = false
+    console.error('Error:', e.response?.data || e.message)
+
+    toast.add({
+      detail: 'Form failed to be saved. ' + (e.response?.data || e.message),
+      severity: 'error',
+      closable: true,
+      life: 10000
+    })
   }
 }
 watch(
@@ -118,6 +162,204 @@ watch(
 const resetForm = () => {
   store.state.userInput.verificationClaim = ''
   localStorage.removeItem('user-input')
+}
+
+const formValidation = (): string[] => {
+  var ret: string[] = []
+
+  switch (store.state.userInput.verificationClaim) {
+    case '':
+      ret.push('Verification claim not selected')
+      break
+    case 'PERSON':
+      const personKeys = Object.keys(store.state.userInput.people)
+      if (personKeys.length != 1) {
+        ret.push('Only single person can be in the collection of people')
+      }
+      const person = personKeys[0]
+
+      const companiesKeys = Object.keys(store.state.userInput.companies)
+      if (companiesKeys.length != 0) {
+        ret.push('Company must not be defined in the person verification form')
+      }
+
+      /// ADDRESS
+      const addressKeys = Object.keys(store.state.userInput.addresses)
+
+      const wrongAddresses = Object.values(store.state.userInput.personAddresses).filter(
+        (kv) => !addressKeys.includes(kv.addressId)
+      )
+      if (wrongAddresses.length > 0) {
+        ret.push(
+          'Wrong reference in at least one of the person address. The address id does not exists'
+        )
+      }
+      const wrongAddressesCompanies = Object.values(store.state.userInput.companyAddresses)
+      if (wrongAddressesCompanies.length > 0) {
+        ret.push('Do not fill in the companies addresses with person verification form.')
+      }
+      const correctAddressesRESIDENTIAL = Object.values(
+        store.state.userInput.personAddresses
+      ).filter(
+        (kv) =>
+          addressKeys.includes(kv.addressId) && kv.personId == person && kv.type == 'RESIDENTIAL'
+      )
+      if (correctAddressesRESIDENTIAL.length != 1) {
+        ret.push(
+          'Please define at least one residential address. It is address where you really live and you can proof it by the bills.'
+        )
+      }
+
+      const correctAddressesPERNAMENT = Object.values(store.state.userInput.personAddresses).filter(
+        (kv) =>
+          addressKeys.includes(kv.addressId) && kv.personId == person && kv.type == 'PERNAMENT'
+      )
+      if (correctAddressesPERNAMENT.length != 1) {
+        ret.push(
+          'Please define at least one pernament address. It is the official address stated on your government document.'
+        )
+      }
+
+      /// PHONES
+      const phonesKeys = Object.keys(store.state.userInput.phones)
+
+      const wrongPersonPhones = Object.values(store.state.userInput.personPhones).filter(
+        (kv) => !phonesKeys.includes(kv.phoneId)
+      )
+      if (wrongPersonPhones.length > 0) {
+        ret.push(
+          'Wrong reference in at least one of the person phones. The phone id does not exists'
+        )
+      }
+      const wrongPhonesCompanies = Object.values(store.state.userInput.companyPhones)
+      if (wrongPhonesCompanies.length > 0) {
+        ret.push('Do not fill in the companies phones with person verification form.')
+      }
+      const correctPhones = Object.values(store.state.userInput.personPhones).filter(
+        (kv) => phonesKeys.includes(kv.phoneId) && kv.personId == person
+      )
+      if (correctPhones.length == 0) {
+        ret.push('Please define at least one personal phone.')
+      }
+
+      /// TELEGRAM
+      const telegramKeys = Object.keys(store.state.userInput.telegramAccounts)
+
+      const wrongPersonTelegramAccounts = Object.values(
+        store.state.userInput.personTelegramAccounts
+      ).filter((kv) => !telegramKeys.includes(kv.telegramId))
+      if (wrongPersonTelegramAccounts.length > 0) {
+        ret.push(
+          'Wrong reference in at least one of the person telegram account. The phone id does not exists'
+        )
+      }
+      const wrongTelegramAccountsCompanies = Object.values(
+        store.state.userInput.companyTelegramAccounts
+      )
+      if (wrongTelegramAccountsCompanies.length > 0) {
+        ret.push('Do not fill in the companies telegram account with person verification form.')
+      }
+
+      /// X
+      const xKeys = Object.keys(store.state.userInput.xAccounts)
+
+      const wrongPersonXAccounts = Object.values(store.state.userInput.personXAccounts).filter(
+        (kv) => !telegramKeys.includes(kv.xAccountId)
+      )
+      if (wrongPersonXAccounts.length > 0) {
+        ret.push(
+          'Wrong reference in at least one of the person X account. The phone id does not exists'
+        )
+      }
+      const wrongXAccountsCompanies = Object.values(store.state.userInput.companyXAccounts)
+      if (wrongXAccountsCompanies.length > 0) {
+        ret.push('Do not fill in the companies X account with person verification form.')
+      }
+
+      /// Discord
+      const discordKeys = Object.keys(store.state.userInput.discordAccounts)
+
+      const wrongPersonDiscordAccounts = Object.values(
+        store.state.userInput.personDiscordAccounts
+      ).filter((kv) => !discordKeys.includes(kv.discordId))
+      if (wrongPersonDiscordAccounts.length > 0) {
+        ret.push(
+          'Wrong reference in at least one of the person X account. The phone id does not exists'
+        )
+      }
+      const wrongDiscordAccountsCompanies = Object.values(
+        store.state.userInput.companyDiscordAccounts
+      )
+      if (wrongDiscordAccountsCompanies.length > 0) {
+        ret.push('Do not fill in the companies discord account with person verification form.')
+      }
+
+      /// Proofs
+
+      // Birth date
+
+      const proofBirth = Object.values(store.state.userInput.proofs).filter(
+        (p) => p.proofType == 'PERSON_BIRTH'
+      )
+      let proofBirthFrontSide = false
+      let proofBirthBackSide = false
+      let proofBirthFullDoc = false
+      if (proofBirth.length == 0) {
+        ret.push(
+          'Proof verifying your birth date is missing. Please provide the government document prooving your birth date, upload the file and create proof link to this document.'
+        )
+      } else {
+        for (let birthProofInstance of proofBirth) {
+          const proofBirthDocumentInstance =
+            store.state.userInput.documents[birthProofInstance.documentId]
+          if (!proofBirthDocumentInstance) {
+            ret.push(
+              `Document prooving the birth date is missing. ${birthProofInstance.documentId}`
+            )
+          } else {
+            const fileProofBirth = Object.values(store.state.userInput.documentsFiles).filter(
+              (p) => p.documentId == birthProofInstance.documentId
+            )
+            // ret.push(JSON.stringify(birthProofInstance.documentId))
+            // ret.push(JSON.stringify(store.state.userInput.documentsFiles))
+            // ret.push(JSON.stringify(proofBirthDocumentInstance))
+            // ret.push(JSON.stringify(fileProofBirth))
+            for (let fileProofBirthInstance of fileProofBirth) {
+              const fileInstance = store.state.userInput.files[fileProofBirthInstance.fileId]
+              switch (fileInstance.type) {
+                case 'BACK':
+                  proofBirthBackSide = true
+                  break
+                case 'FRONT':
+                  proofBirthFrontSide = true
+                  break
+                default:
+                  proofBirthFullDoc = true
+              }
+            }
+          }
+        }
+      }
+      if (proofBirth.length == 0) {
+        // processed before
+      } else if (proofBirthFullDoc) {
+        // ok
+      } else if (!proofBirthFrontSide) {
+        ret.push(
+          `Front side of the document prooving the birth date is missing. ${proofBirthFrontSide} ${proofBirthBackSide}`
+        )
+      } else if (!proofBirthBackSide) {
+        ret.push('Back side of the document prooving the birth date is missing.')
+      } else if (proofBirthFrontSide && proofBirthBackSide) {
+        // ok
+      } else {
+        ret.push('File prooving the birth date is missing.')
+      }
+
+      break
+  }
+
+  return ret
 }
 </script>
 <template>
@@ -215,7 +457,7 @@ const resetForm = () => {
             Reset
           </Button>
         </Fieldset>
-        <div v-if="store.state.userInput.verificationClaim" class="flex flex-col gap-2">
+        <div v-if="store.state.userInput.verificationClaim" class="flex flex-col gap-2 mt-2">
           <Fieldset
             :toggleable="true"
             legend="Entities"
@@ -660,8 +902,25 @@ const resetForm = () => {
               </RouterLink>
             </Fieldset>
           </Fieldset>
-          <p>Your address: {{ store.state.authState.account }}</p>
-          <Button v-if="!store.state.isVerifier" severity="primary" @click="saveFormToGateway">
+          <p>Your address: <AvmAddress :address="store.state.authState.account"></AvmAddress></p>
+          <ul v-for="item in formValidation()">
+            <li>{{ item }}</li>
+          </ul>
+
+          <ProgressSpinner
+            style="width: 1em; height: 1em"
+            strokeWidth="8"
+            fill="transparent"
+            animationDuration=".5s"
+            aria-label="Save form to decentralized secure storage"
+            v-if="state.savingKYC"
+          />
+          <Button
+            v-if="!store.state.isVerifier"
+            severity="primary"
+            @click="saveFormToGatewayClick"
+            :disabled="state.savingKYC"
+          >
             Save form to decentralized secure storage
           </Button>
         </div>

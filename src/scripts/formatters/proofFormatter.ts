@@ -6,5 +6,8 @@ export const proofFormatter = (proof: IProof) => {
   const store = useAppStore()
   const doc = store.state.userInput.documents[proof.documentId]
   const docText = doc ? documentFormatter(doc) : ''
-  return `${enumFormatter('PROOF_TYPE', proof.proofType)} - ${docText} - ${proof.note}`.trim()
+  if (proof.note) {
+    return `${enumFormatter('PROOF_TYPE', proof.proofType)} - ${docText} - ${proof.note}`.trim()
+  }
+  return `${enumFormatter('PROOF_TYPE', proof.proofType)} - ${docText}`.trim()
 }

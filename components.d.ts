@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AvmAddress: typeof import('./src/components/AvmAddress.vue')['default']
     Button: typeof import('primevue/button')['default']
     CountrySelectField: typeof import('./src/components/form/CountrySelectField.vue')['default']
     DateField: typeof import('./src/components/form/DateField.vue')['default']
@@ -30,6 +31,7 @@ declare module 'vue' {
     OverlayBadge: typeof import('primevue/overlaybadge')['default']
     PageFooter: typeof import('./src/components/PageFooter.vue')['default']
     PageHeader: typeof import('./src/components/PageHeader.vue')['default']
+    ProgressSpinner: typeof import('primevue/progressspinner')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Select: typeof import('primevue/select')['default']
