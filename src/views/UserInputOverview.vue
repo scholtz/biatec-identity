@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Layout from '@/layouts/PublicLayout.vue'
 import { useAppStore } from '@/stores/app'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import { addressFormatter } from '@/scripts/formatters/addressFormatter'
 import { companyFormatter } from '@/scripts/formatters/companyFormatter'
@@ -112,10 +112,9 @@ const loadFromGatewayAdmin = async () => {
     }
   } catch (e: any) {
     console.error('form not loaded', e)
-
     toast.add({
-      detail: 'Form failed to load. ' + e.message,
-      severity: 'error',
+      detail: 'Form has been initiated',
+      severity: 'info',
       closable: true,
       life: 10000
     })
@@ -923,6 +922,11 @@ const formValidation = (): string[] => {
           >
             Save form to decentralized secure storage
           </Button>
+        </div>
+        <div v-if="store.state.isVerifier">
+          <RouterLink :to="`/kyc-verification/${store.state.verificationUser}`">
+            <Button severity="primary">Go to KYC verification</Button>
+          </RouterLink>
         </div>
       </div>
     </Fieldset>

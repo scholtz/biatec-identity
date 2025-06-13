@@ -181,6 +181,11 @@ const router = createRouter({
       path: '/proof/:id',
       name: 'proof-id',
       component: () => import('@/views/ProofView.vue')
+    },
+    {
+      path: '/kyc-verification/:userId',
+      name: 'kyc-verification',
+      component: () => import('@/views/ValidationForm.vue')
     }
   ]
 })
