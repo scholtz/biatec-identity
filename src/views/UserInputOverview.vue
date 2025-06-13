@@ -88,8 +88,8 @@ const loadFromGateway = async () => {
     console.error('form not loaded', e)
 
     toast.add({
-      detail: 'Form failed to load. ' + e.message,
-      severity: 'error',
+      detail: 'Form has been initiated',
+      severity: 'info',
       closable: true,
       life: 10000
     })
