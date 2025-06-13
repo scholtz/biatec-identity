@@ -22,7 +22,7 @@ spec:
         - name: regcred
       containers:
         - name: biatec-identity-main
-          image: scholtz2/biatec-identity:1.2025.05.10-main
+          image: scholtz2/biatec-identity:1.2025.06.13-main
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
