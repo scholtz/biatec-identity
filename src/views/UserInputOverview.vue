@@ -53,6 +53,14 @@ onMounted(async () => {
     })
   }
 })
+watch(
+  () => store.state.authState.isAuthenticated,
+  async (newValue) => {
+    if (newValue) {
+      await loadFromGateway()
+    }
+  }
+)
 
 const loadFromGateway = async () => {
   try {
@@ -113,11 +121,40 @@ const loadFromGatewayAdmin = async () => {
   } catch (e: any) {
     console.error('form not loaded', e)
     toast.add({
-      detail: 'Form has been initiated',
-      severity: 'info',
+      detail: 'Form does not exists or is not loaded',
+      severity: 'warn',
       closable: true,
       life: 10000
     })
+    store.state.userInput = {
+      verificationClaim: '',
+      people: {},
+      companies: {},
+      addresses: {},
+      phones: {},
+      xAccounts: {},
+      discordAccounts: {},
+      telegramAccounts: {},
+      files: {},
+      documents: {},
+      documentsFiles: {},
+      proofs: {},
+      personAddresses: {},
+      personEmails: {},
+      personPhones: {},
+      personXAccounts: {},
+      personDiscordAccounts: {},
+      personTelegramAccounts: {},
+      companyAddresses: {},
+      companyEmails: {},
+      companyPhones: {},
+      companyPeople: {},
+      companyXAccounts: {},
+      companyDiscordAccounts: {},
+      companyTelegramAccounts: {},
+      note: ''
+    }
+    store.state.verificationDataLoaded = true
   }
 }
 const saveFormToGatewayClick = async () => {

@@ -54,15 +54,25 @@ const resolver = () => {
   }
 }
 const onFormSubmit = ({ valid }) => {
-  console.log('onFormSubmit', valid, state.obj, store.state.userInput)
-  if (valid) {
-    let id = route.params['id'] as string
-    if (!id) id = uuidv7()
-    store.state.userInput.files[id] = state.obj
-    toast.add({ severity: 'success', summary: 'Form has been submitted', life: 3000 })
-    router.push('/user-input-overview')
-  } else {
-    toast.add({ severity: 'error', summary: 'The form contains the error', life: 3000 })
+  try {
+    console.log('onFormSubmit', valid, state.obj, store.state.userInput)
+    if (valid) {
+      let id = route.params['id'] as string
+      if (!id) id = uuidv7()
+      store.state.userInput.files[id] = state.obj
+      toast.add({ severity: 'success', summary: 'Form has been submitted', life: 3000 })
+      router.push('/user-input-overview')
+    } else {
+      toast.add({ severity: 'error', summary: 'The form contains the error', life: 3000 })
+    }
+  } catch (error) {
+    console.error('Error in onFormSubmit:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error submitting form',
+      detail: 'An unexpected error occurred. Please try again.',
+      life: 3000
+    })
   }
 }
 
@@ -100,42 +110,61 @@ const onBeforeSend = (e: FileUploadBeforeSendEvent) => {
   toast.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded', life: 3000 })
 }
 const loadFile = async () => {
-  const response = await axios.get(
-    `${store.state.fileGateway}/v1/document/download/${state.obj.fileId}`,
-    { responseType: 'blob', headers: { Authorization: store.state.authState.arc14Header } }
-  )
-  // Extract MIME type from response.headers
-  const mimeType = response.headers['content-type'] || 'application/octet-stream'
+  try {
+    const response = await axios.get(
+      `${store.state.fileGateway}/v1/document/download/${state.obj.fileId}`,
+      { responseType: 'blob', headers: { Authorization: store.state.authState.arc14Header } }
+    )
+    // Extract MIME type from response.headers
+    const mimeType = response.headers['content-type'] || 'application/octet-stream'
 
-  // Extract file name from Content-Disposition
-  let fileName = 'downloaded-file' // Default file name
-  const contentDisposition = response.headers['content-disposition']
-  if (contentDisposition) {
-    const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
-    if (match && match[1]) {
-      fileName = match[1].replace(/['"]/g, '') // Remove surrounding quotes
+    // Extract file name from Content-Disposition
+    let fileName = 'downloaded-file' // Default file name
+    const contentDisposition = response.headers['content-disposition']
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      if (match && match[1]) {
+        fileName = match[1].replace(/['"]/g, '') // Remove surrounding quotes
+      }
     }
-  }
 
-  // Convert Blob to File
-  const blob = response.data // Already a Blob
-  uploadFile.value = new File([blob], fileName, { type: mimeType })
-  console.log('state.file', uploadFile.value)
+    // Convert Blob to File
+    const blob = response.data // Already a Blob
+    uploadFile.value = new File([blob], fileName, { type: mimeType })
+    console.log('state.file', uploadFile.value)
+  } catch (error) {
+    console.error('Error loading file:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error loading file',
+      detail: 'Failed to load the file. Please try again.',
+      life: 3000
+    })
+  }
 }
 const downloadFile = async () => {
-  if (!uploadFile.value) {
-    console.error('No file available to download.')
-    return
-  }
+  try {
+    if (!uploadFile.value) {
+      throw new Error('No file available to download.')
+    }
 
-  const url = URL.createObjectURL(uploadFile.value) // Create a temporary URL
-  const link = document.createElement('a') // Create a link element
-  link.href = url
-  link.download = uploadFile.value.name // Set the file name
-  document.body.appendChild(link)
-  link.click() // Programmatically click the link to trigger the download
-  document.body.removeChild(link) // Clean up
-  URL.revokeObjectURL(url) // Release the URL
+    const url = URL.createObjectURL(uploadFile.value) // Create a temporary URL
+    const link = document.createElement('a') // Create a link element
+    link.href = url
+    link.download = uploadFile.value.name // Set the file name
+    document.body.appendChild(link)
+    link.click() // Programmatically click the link to trigger the download
+    document.body.removeChild(link) // Clean up
+    URL.revokeObjectURL(url) // Release the URL
+  } catch (error) {
+    console.error('Error downloading file:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error downloading file',
+      detail: 'Failed to download the file. Please try again.',
+      life: 3000
+    })
+  }
 }
 </script>
 
