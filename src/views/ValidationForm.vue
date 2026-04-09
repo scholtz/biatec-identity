@@ -232,10 +232,10 @@ const investorForExpirationDate = computed({
 })
 const feeMultiplierNum = computed({
   get() {
-    return state.obj.feeMultiplier ? state.obj.feeMultiplier / state.obj.feeMultiplierBase : 2
+    return state.obj.feeMultiplier ? state.obj.feeMultiplier / FEE_MULTIPLIER_BASE : 2
   },
   set(val: number | bigint | null) {
-    state.obj.feeMultiplier = Math.round(Number(val) * state.obj.feeMultiplierBase)
+    state.obj.feeMultiplier = Math.round(Number(val) * FEE_MULTIPLIER_BASE)
   }
 })
 </script>
@@ -360,8 +360,8 @@ const feeMultiplierNum = computed({
           helpText="Check if the verification is locked."
         />
         <label class="block text-sm font-medium mb-2"
-          >Fee Multiplier {{ state.obj.feeMultiplier }}</label
-        >
+          >Fee Multiplier {{ state.obj.feeMultiplier }}
+        </label>
         <InputNumber
           fieldName="feeMultiplier"
           v-model.number="feeMultiplierNum"

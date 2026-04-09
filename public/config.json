@@ -1,5 +1,6 @@
 {
-  "bff": "https://bff.asa.gold",
+  "bffProd": "https://bff.asa.gold",
+  "bff": "https://localhost:44376",
   "env": "mainnet-v1.0",
   "algodHost": "https://mainnet-api.algonode.cloud",
   "algodPort": 443,
