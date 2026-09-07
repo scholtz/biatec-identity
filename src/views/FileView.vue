@@ -14,7 +14,7 @@ import DateField from '@/components/form/DateField.vue'
 import type { IFile } from '@/interface/IFile'
 import type { FileUploadBeforeSendEvent, FileUploadUploadEvent } from 'primevue/fileupload'
 import { VueFilesPreview } from 'vue-files-preview'
-import axios from 'axios'
+import { getGatewayClient } from '@/api/gatewayClient'
 const store = useAppStore()
 const toast = useToast()
 const router = useRouter()
@@ -111,16 +111,19 @@ const onBeforeSend = (e: FileUploadBeforeSendEvent) => {
 }
 const loadFile = async () => {
   try {
-    const response = await axios.get(
-      `${store.state.fileGateway}/v1/document/download/${state.obj.fileId}`,
-      { responseType: 'blob', headers: { Authorization: store.state.authState.arc14Header } }
-    )
+    const response = await getGatewayClient().GET('/v1/document/download/{docId}', {
+      params: { path: { docId: state.obj.fileId } },
+      parseAs: 'blob'
+    })
+    if (!response.response.ok || !response.data) {
+      throw new Error(`Failed to download the file (${response.response.status})`)
+    }
     // Extract MIME type from response.headers
-    const mimeType = response.headers['content-type'] || 'application/octet-stream'
+    const mimeType = response.response.headers.get('content-type') || 'application/octet-stream'
 
     // Extract file name from Content-Disposition
     let fileName = 'downloaded-file' // Default file name
-    const contentDisposition = response.headers['content-disposition']
+    const contentDisposition = response.response.headers.get('content-disposition')
     if (contentDisposition) {
       const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
       if (match && match[1]) {

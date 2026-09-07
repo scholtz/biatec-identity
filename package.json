@@ -12,6 +12,7 @@
     "test:e2e": "start-server-and-test preview http://localhost:4173 'cypress run --e2e'",
     "test:e2e:dev": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'",
     "build-only": "vite build",
+    "generate:gateway-client": "openapi-typescript src/api/gateway-swagger.json -o src/api/gateway-schema.d.ts",
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
@@ -28,6 +29,7 @@
     "biatec-concentrated-liquidity-amm": "^0.9.25",
     "buffer": "^6.0.3",
     "js-sha512": "^0.9.0",
+    "openapi-fetch": "^0.17.0",
     "phone": "^3.1.56",
     "pinia": "^2.3.0",
     "primeicons": "^7.0.0",
@@ -62,6 +64,7 @@
     "eslint-plugin-vue": "^9.32.0",
     "jsdom": "^25.0.1",
     "npm-run-all2": "^7.0.2",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.4.49",
     "postcss-nesting": "^13.0.1",
     "prettier": "^3.4.2",

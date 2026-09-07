@@ -16,7 +16,7 @@ import { proofFormatter } from '@/scripts/formatters/proofFormatter'
 import type { KYCInput } from '@/interface/KYCInput'
 
 import { onMounted, reactive, watch } from 'vue'
-import axios from 'axios'
+import { getGatewayClient } from '@/api/gatewayClient'
 import AvmAddress from '@/components/AvmAddress.vue'
 import { useToast } from 'primevue/usetoast'
 
@@ -98,11 +98,10 @@ const loadFromGateway = async () => {
       // do not override the loaded data
       return
     }
-    const isVerifierResponse = await axios.get(`${store.state.fileGateway}/v1/is-biatec-verifier`, {
-      headers: { Authorization: store.state.authState.arc14Header }
-    })
+    const gateway = getGatewayClient()
+    const isVerifierResponse = await gateway.GET('/v1/is-biatec-verifier')
     store.state.isVerifier = false
-    if (isVerifierResponse.status === 200) {
+    if (isVerifierResponse.response.ok) {
       if (isVerifierResponse.data) {
         store.state.isVerifier = true
         return
@@ -110,17 +109,19 @@ const loadFromGateway = async () => {
     }
 
     var docId = 'kyc-form.json'
-    const response = await axios.get(`${store.state.fileGateway}/v1/document/utf8/${docId}`, {
-      headers: { Authorization: store.state.authState.arc14Header }
+    const response = await gateway.GET('/v1/document/utf8/{docId}', {
+      params: { path: { docId } }
     })
-    if (response.status === 200) {
+    if (response.response.ok) {
       console.log('response', response)
-      const data = response.data as KYCInput
+      const data = response.data as unknown as KYCInput
 
       if (data.verificationClaim) {
         console.log('loaded KYCInput from secure storage', data)
         store.state.userInput = data
       }
+    } else {
+      throw new Error(`Failed to load the form (${response.response.status})`)
     }
   } catch (e: any) {
     console.error('form not loaded', e)
@@ -137,17 +138,16 @@ const loadFromGatewayAdmin = async () => {
   state.loadFailedForUser = ''
   try {
     var docId = 'kyc-form.json'
-    const response = await axios.get(
-      `${store.state.fileGateway}/v1/document/utf8/${store.state.verificationUser}/${docId}`,
-      {
-        headers: { Authorization: store.state.authState.arc14Header }
-      }
-    )
+    const response = await getGatewayClient().GET('/v1/document/utf8/{userId}/{docId}', {
+      params: { path: { userId: store.state.verificationUser, docId } }
+    })
     store.state.verificationDataLoaded = false
-    if (response.status === 200) {
+    if (response.response.ok) {
       console.log('response', response)
-      store.state.userInput = response.data
+      store.state.userInput = response.data as unknown as KYCInput
       store.state.verificationDataLoaded = true
+    } else {
+      throw new Error(`Failed to load the form (${response.response.status})`)
     }
   } catch (e: any) {
     console.error('form not loaded', e)
@@ -168,13 +168,13 @@ const initiateNewKycDocument = async () => {
     state.savingKYC = true
     const newForm = emptyKycForm()
     const docId = 'kyc-form.json'
-    const url = `${store.state.fileGateway}/v1/document/utf8/${forUser}/${docId}`
-    const headers = {
-      Authorization: store.state.authState.arc14Header,
-      'Content-Type': 'application/json'
+    const response = await getGatewayClient().PUT('/v1/document/utf8/{userId}/{docId}', {
+      params: { path: { userId: forUser, docId } },
+      body: JSON.stringify(newForm)
+    })
+    if (!response.response.ok) {
+      throw new Error(`Gateway rejected the document (${response.response.status})`)
     }
-    const data = JSON.stringify(JSON.stringify(newForm))
-    const response = await axios.put(url, data, { headers })
     console.log('new kyc document stored', response.data)
     store.state.userInput = newForm
     store.state.verificationDataLoaded = true
@@ -202,14 +202,13 @@ const saveFormToGatewayClick = async () => {
   try {
     state.savingKYC = true
     const docId = 'kyc-form.json'
-    const url = `${store.state.fileGateway}/v1/document/utf8/${docId}`
-    const headers = {
-      Authorization: store.state.authState.arc14Header,
-      'Content-Type': 'application/json'
+    const response = await getGatewayClient().PUT('/v1/document/utf8/{docId}', {
+      params: { path: { docId } },
+      body: JSON.stringify(store.state.userInput)
+    })
+    if (!response.response.ok) {
+      throw new Error(`Gateway rejected the document (${response.response.status})`)
     }
-    const data = JSON.stringify(JSON.stringify(store.state.userInput))
-
-    const response = await axios.put(url, data, { headers })
     console.log('Success:', response.data)
     state.savingKYC = false
     toast.add({

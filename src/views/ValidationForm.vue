@@ -11,7 +11,8 @@ import { useRoute, useRouter } from 'vue-router'
 import InputTextField from '@/components/form/InputTextField.vue'
 import CheckboxField from '@/components/form/CheckboxField.vue'
 import DateField from '@/components/form/DateField.vue'
-import axios from 'axios'
+import { getGatewayClient } from '@/api/gatewayClient'
+import type { components } from '@/api/gateway-schema'
 
 import {
   BiatecClammPoolClient,
@@ -60,11 +61,10 @@ const loadUser = async () => {
   //           defaultSigner: dummyTransactionSigner
   //         })
 
-  const response = await axios.get(
-    `${store.state.fileGateway}/v1/user-info/${route.params['userId']}`,
-    { headers: { Authorization: store.state.authState.arc14Header } }
-  )
-  if (response.data) {
+  const response = await getGatewayClient().GET('/v1/user-info/{userId}', {
+    params: { path: { userId: route.params['userId'] as string } }
+  })
+  if (response.response.ok && response.data) {
     state.obj = response.data as ValidationObj
   } else {
     toast.add({ severity: 'warn', summary: 'User not found', life: 3000 })
@@ -95,12 +95,14 @@ const onFormSubmit = async ({ valid }) => {
       // if (!id) id = uuidv7()
       // if (!store.state.userInput.verificationStatuses) store.state.userInput.verificationStatuses = {}
       // store.state.userInput.verificationStatuses[id] = state.obj
-      const response = await axios.post(
-        `${store.state.fileGateway}/v1/validate-document/${route.params['userId']}?validationFailureReason=${encodeURIComponent(state.error)}`,
-        state.obj,
-        { headers: { Authorization: store.state.authState.arc14Header } }
-      )
-      if (response.status < 200 || response.status >= 300) {
+      const response = await getGatewayClient().POST('/v1/validate-document/{userId}', {
+        params: {
+          path: { userId: route.params['userId'] as string },
+          query: { validationFailureReason: state.error }
+        },
+        body: state.obj as unknown as components['schemas']['IdentityInfo']
+      })
+      if (!response.response.ok) {
         throw new Error('Failed to submit form')
       }
       toast.add({ severity: 'success', summary: 'Form has been submitted', life: 3000 })
