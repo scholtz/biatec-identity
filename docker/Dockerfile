@@ -5,12 +5,11 @@ RUN apt update \
   && apt-get clean autoclean \
   && apt-get autoremove --yes \
   && rm -rf /var/lib/{apt,dpkg,cache,log}/ \
-  && npm install -g npm@latest
-COPY package-lock.json package-lock.json
-COPY package.json package.json
-RUN npm ci
+  && corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN pnpm run build
 RUN cd /src/dist && ls
 #RUN npm run test
 
