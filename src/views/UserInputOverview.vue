@@ -24,7 +24,37 @@ const toast = useToast()
 const store = useAppStore()
 
 const state = reactive({
-  savingKYC: false
+  savingKYC: false,
+  loadFailedForUser: ''
+})
+
+const emptyKycForm = (): KYCInput => ({
+  verificationClaim: '',
+  people: {},
+  companies: {},
+  addresses: {},
+  phones: {},
+  xAccounts: {},
+  discordAccounts: {},
+  telegramAccounts: {},
+  files: {},
+  documents: {},
+  documentsFiles: {},
+  proofs: {},
+  personAddresses: {},
+  personEmails: {},
+  personPhones: {},
+  personXAccounts: {},
+  personDiscordAccounts: {},
+  personTelegramAccounts: {},
+  companyAddresses: {},
+  companyEmails: {},
+  companyPhones: {},
+  companyPeople: {},
+  companyXAccounts: {},
+  companyDiscordAccounts: {},
+  companyTelegramAccounts: {},
+  note: ''
 })
 
 onMounted(async () => {
@@ -104,6 +134,7 @@ const loadFromGateway = async () => {
   }
 }
 const loadFromGatewayAdmin = async () => {
+  state.loadFailedForUser = ''
   try {
     var docId = 'kyc-form.json'
     const response = await axios.get(
@@ -121,41 +152,26 @@ const loadFromGatewayAdmin = async () => {
   } catch (e: any) {
     console.error('form not loaded', e)
     toast.add({
-      detail: 'Form does not exists or is not loaded',
+      detail:
+        'KYC document failed to load for this address. You can initiate a new KYC document below.',
       severity: 'warn',
       closable: true,
       life: 10000
     })
-    store.state.userInput = {
-      verificationClaim: '',
-      people: {},
-      companies: {},
-      addresses: {},
-      phones: {},
-      xAccounts: {},
-      discordAccounts: {},
-      telegramAccounts: {},
-      files: {},
-      documents: {},
-      documentsFiles: {},
-      proofs: {},
-      personAddresses: {},
-      personEmails: {},
-      personPhones: {},
-      personXAccounts: {},
-      personDiscordAccounts: {},
-      personTelegramAccounts: {},
-      companyAddresses: {},
-      companyEmails: {},
-      companyPhones: {},
-      companyPeople: {},
-      companyXAccounts: {},
-      companyDiscordAccounts: {},
-      companyTelegramAccounts: {},
-      note: ''
-    }
-    store.state.verificationDataLoaded = true
+    store.state.verificationDataLoaded = false
+    state.loadFailedForUser = store.state.verificationUser
   }
+}
+const initiateNewKycDocument = () => {
+  store.state.userInput = emptyKycForm()
+  store.state.verificationDataLoaded = true
+  state.loadFailedForUser = ''
+  toast.add({
+    detail: `New KYC document initiated for ${store.state.verificationUser}`,
+    severity: 'info',
+    closable: true,
+    life: 5000
+  })
 }
 const saveFormToGatewayClick = async () => {
   try {
@@ -418,6 +434,19 @@ const formValidation = (): string[] => {
           labelText="User address"
         />
         <Button @click="loadFromGatewayAdmin">Load kyc form</Button>
+        <Message
+          v-if="state.loadFailedForUser && state.loadFailedForUser == store.state.verificationUser"
+          severity="warn"
+        >
+          KYC document failed to load for this address. You can initiate a new KYC document for it.
+        </Message>
+        <Button
+          v-if="state.loadFailedForUser && state.loadFailedForUser == store.state.verificationUser"
+          severity="warn"
+          @click="initiateNewKycDocument"
+        >
+          Initiate new KYC document
+        </Button>
       </Fieldset>
       <div
         v-if="
