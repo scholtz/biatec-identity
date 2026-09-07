@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": false,
   "type": "module",
+  "packageManager": "pnpm@11.10.0+sha512.C3+LmAYAMZBMAX46QesYehbUDuuCm5XE+MsDaBdh/Eq1PdIZEVubRH9NzhoFohR2RGHn03AzkqnzL5URzoyGyA==",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
@@ -19,7 +20,7 @@
     "@primevue/auto-import-resolver": "^4.2.5",
     "@primevue/forms": "^4.2.5",
     "@primevue/themes": "^4.2.5",
-    "@vitest/eslint-plugin": "^1.1.21",
+    "@vitest/eslint-plugin": "^1.6.0",
     "algorand-authentication-component-vue": "^1.1.3",
     "algosdk": "^2.9.0",
     "aos": "^2.3.4",
@@ -33,7 +34,7 @@
     "primevue": "^4.2.5",
     "qrcode-reader-vue3": "^3.1.2",
     "tailwindcss-primeui": "^0.3.4",
-    "unplugin-vue-components": "latest",
+    "unplugin-vue-components": "^0.28.0",
     "uuid": "^11.0.3",
     "vue": "^3.5.13",
     "vue-files-preview": "^1.0.37",
@@ -72,7 +73,7 @@
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-vue-devtools": "^7.6.8",
     "vite-svg-loader": "^5.1.0",
-    "vitest": "^2.1.8",
+    "vitest": "^3.2.6",
     "vue-tsc": "^2.2.0"
   }
 }
