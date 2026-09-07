@@ -162,16 +162,41 @@ const loadFromGatewayAdmin = async () => {
     state.loadFailedForUser = store.state.verificationUser
   }
 }
-const initiateNewKycDocument = () => {
-  store.state.userInput = emptyKycForm()
-  store.state.verificationDataLoaded = true
-  state.loadFailedForUser = ''
-  toast.add({
-    detail: `New KYC document initiated for ${store.state.verificationUser}`,
-    severity: 'info',
-    closable: true,
-    life: 5000
-  })
+const initiateNewKycDocument = async () => {
+  const forUser = store.state.verificationUser
+  try {
+    state.savingKYC = true
+    const newForm = emptyKycForm()
+    const docId = 'kyc-form.json'
+    const url = `${store.state.fileGateway}/v1/document/utf8/${forUser}/${docId}`
+    const headers = {
+      Authorization: store.state.authState.arc14Header,
+      'Content-Type': 'application/json'
+    }
+    const data = JSON.stringify(JSON.stringify(newForm))
+    const response = await axios.put(url, data, { headers })
+    console.log('new kyc document stored', response.data)
+    store.state.userInput = newForm
+    store.state.verificationDataLoaded = true
+    state.loadFailedForUser = ''
+    toast.add({
+      detail: `New KYC document initiated and stored for ${forUser}`,
+      severity: 'info',
+      closable: true,
+      life: 5000
+    })
+  } catch (e: any) {
+    console.error('failed to store new kyc document', e)
+    toast.add({
+      detail:
+        `Failed to store new KYC document for ${forUser}. ` + (e.response?.data || e.message),
+      severity: 'error',
+      closable: true,
+      life: 10000
+    })
+  } finally {
+    state.savingKYC = false
+  }
 }
 const saveFormToGatewayClick = async () => {
   try {
@@ -443,6 +468,7 @@ const formValidation = (): string[] => {
         <Button
           v-if="state.loadFailedForUser && state.loadFailedForUser == store.state.verificationUser"
           severity="warn"
+          :disabled="state.savingKYC"
           @click="initiateNewKycDocument"
         >
           Initiate new KYC document
